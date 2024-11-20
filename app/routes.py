@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from .models import User, MLTask, db
+from flask import render_template, request, redirect, url_for
+
 
 app = Blueprint('main', __name__)
 
@@ -7,15 +9,18 @@ app = Blueprint('main', __name__)
 def index():
     return render_template('index.html')  # Render a home page
 
-@app.route('/register', methods=['POST'])
+@app.route('/register')
 def register():
-    data = request.json
-    if User.query.filter_by(username=data['username']).first():
-        return jsonify({"message": "User already exists"}), 400
-    new_user = User(username=data['username'], balance=10.0)  # Default balance
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({"message": "User registered successfully"})
+    if request.method == 'POST':
+        data = request.json
+        if User.query.filter_by(username=data['username']).first():
+            return jsonify({"message": "User already exists"}), 400
+        new_user = User(username=data['username'], balance=10.0)  # Default balance
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"message": "User registered successfully"}), 200, redirect(url_for('index'))
+    return render_template('register.html')
+
 
 @app.route('/submit_task', methods=['POST'])
 def submit_task():
@@ -29,7 +34,7 @@ def submit_task():
     user.balance -= 1.0  # Deduct balance for task submission
     db.session.add(task)
     db.session.commit()
-    return jsonify({"message": "Task submitted successfully", "task_id": task.id})
+    return jsonify({"message": "Task submitted successfully", "task_id": task.id}) , redirect(url_for('index'))
 
 @app.route('/tasks/<username>', methods=['GET'])
 def get_tasks(username):
