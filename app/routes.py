@@ -1,45 +1,59 @@
-from flask import Blueprint, render_template, request, jsonify
-from .models import User, MLTask, db
-from flask import render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from .database import User, Transaction, MLTask, db
+from .utils import summarize_text
 
+main_page = Blueprint('main_page', __name__,template_folder="static")
 
-app = Blueprint('main', __name__)
-
-@app.route('/')
+@main_page.route('/')
 def index():
-    return render_template('index.html')  # Render a home page
+    return render_template('index.html')
 
-@app.route('/register')
+@main_page.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        data = request.json
+        data = request.form
         if User.query.filter_by(username=data['username']).first():
             return jsonify({"message": "User already exists"}), 400
         new_user = User(username=data['username'], balance=10.0)  # Default balance
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({"message": "User registered successfully"}), 200, redirect(url_for('index'))
+        return redirect(url_for('main_page.index'))
     return render_template('register.html')
 
+@main_page.route('/login', methods=['GET', 'POST'])
+def login():
+    # Add login functionality here
+    return render_template('login.html')
 
-@app.route('/submit_task', methods=['POST'])
+@main_page.route('/recharge', methods=['GET', 'POST'])
+def recharge():
+    if request.method == 'POST':
+        amount = request.form['amount']
+        user = User.query.first()  # Get the current logged-in user
+        user.balance += float(amount)  # Add the recharge amount to the user's balance
+        transaction = Transaction(user_id=user.id, amount=float(amount))
+        db.session.add(transaction)
+        db.session.commit()
+        return redirect(url_for('main_page.index'))
+    return render_template('recharge.html')
+
+@main_page.route('/submit_task', methods=['GET', 'POST'])
 def submit_task():
-    data = request.json
-    user = User.query.filter_by(username=data['username']).first()
-    if not user:
-        return jsonify({"message": "User not found"}), 404
-    if user.balance <= 0:
-        return jsonify({"message": "Insufficient balance"}), 400
-    task = MLTask(user_id=user.id, prompt=data['prompt'])
-    user.balance -= 1.0  # Deduct balance for task submission
-    db.session.add(task)
-    db.session.commit()
-    return jsonify({"message": "Task submitted successfully", "task_id": task.id}) , redirect(url_for('index'))
+    if request.method == 'POST':
+        prompt = request.form['prompt']
+        user = User.query.first()  # Get the current logged-in user
+        if user.balance <= 0:
+            return jsonify({"message": "Insufficient balance"}), 400
+        user.balance -= 10  # Deduct 10 credits per task
+        db.session.commit()
 
-@app.route('/tasks/<username>', methods=['GET'])
-def get_tasks(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify({"message": "User not found"}), 404
-    tasks = MLTask.query.filter_by(user_id=user.id).all()
-    return jsonify([{"id": task.id, "prompt": task.prompt, "result": task.result} for task in tasks])
+        # Summarize the text
+        summary = summarize_text(prompt)
+        
+        # Save the task in the database
+        task = MLTask(user_id=user.id, prompt=prompt, result=summary)
+        db.session.add(task)
+        db.session.commit()
+
+        return render_template('submit_task.html', summary=summary)
+    return render_template('submit_task.html')

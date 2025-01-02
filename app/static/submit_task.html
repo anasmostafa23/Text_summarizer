@@ -1,16 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Submit Task</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h2>Submit an ML Task</h2>
-    <form method="POST" action="/submit_task">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <label for="prompt">Prompt:</label>
-        <textarea id="prompt" name="prompt" required></textarea>
-        <button type="submit">Submit</button>
+    <h1>Text Summarization</h1>
+    
+    <form method="POST" action="{{ url_for('main_page.submit_task') }}">
+        <label for="prompt">Enter text to summarize:</label><br>
+        <textarea name="prompt" required></textarea><br><br>
+        <button type="submit">Summarize</button>
     </form>
+    
+    {% if summary %}
+        <h2>Summary:</h2>
+        <div>{{ summary }}</div>
+    {% endif %}
 </body>
 </html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recharge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Recharge Your Balance</h1>
+    
+    <form method="POST" action="{{ url_for('main_page.recharge') }}">
+        <label for="amount">Recharge Amount:</label>
+        <input type="number" id="amount" name="amount" required><br>
+        <button type="submit">Recharge</button>
+    </form>
+    
+    <p><a href="{{ url_for('main_page.index') }}">Go back to Dashboard</a></p>
+</body>
+</html>

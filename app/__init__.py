@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from .routes import main_page
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -13,7 +14,8 @@ def create_app():
     migrate.init_app(app, db)
 
     with app.app_context():
-        from . import routes
         db.create_all()  # Ensure database tables are created
 
+    app.register_blueprint(main_page)
+    
     return app
