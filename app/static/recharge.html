@@ -2,18 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recharge</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <h1>Recharge Your Balance</h1>
     
-    <form method="POST" action="{{ url_for('main_page.recharge') }}">
-        <label for="amount">Recharge Amount:</label>
-        <input type="number" id="amount" name="amount" required><br>
-        <button type="submit">Recharge</button>
+    <form method="POST" action="/recharge">
+        {{ form.hidden_tag() }}
+        
+        <div>
+            <label for="amount">Recharge Amount</label>
+            {{ form.amount() }}
+            {% if form.amount.errors %}
+                <ul>
+                    {% for error in form.amount.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div>
+            <button type="submit">{{ form.submit.label }}</button>
+        </div>
     </form>
     
-    <p><a href="{{ url_for('main_page.index') }}">Go back to Dashboard</a></p>
+    <p><a href="/">Back to Dashboard</a></p>
 </body>
 </html>

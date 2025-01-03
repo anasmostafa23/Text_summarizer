@@ -1,6 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
-from .database import User, Transaction, MLTask, db
+from .database import User, Transaction, MLTask , db 
 from .utils import summarize_text
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from .forms import RegistrationForm, LoginForm, RechargeForm
+
 
 main_page = Blueprint('main_page', __name__,template_folder="static")
 
@@ -8,52 +12,66 @@ main_page = Blueprint('main_page', __name__,template_folder="static")
 def index():
     return render_template('index.html')
 
+
+# Route for registration
 @main_page.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        data = request.form
-        if User.query.filter_by(username=data['username']).first():
-            return jsonify({"message": "User already exists"}), 400
-        new_user = User(username=data['username'], balance=10.0)  # Default balance
-        db.session.add(new_user)
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data, password_hash= generate_password_hash(form.password.data ))
+        db.session.add(user)
         db.session.commit()
-        return redirect(url_for('main_page.index'))
-    return render_template('register.html')
+        login_user(user)
+        return redirect(url_for('main_page.recharge'))
+    return render_template('register.html', form=form)
 
+# Route for login
 @main_page.route('/login', methods=['GET', 'POST'])
 def login():
-    # Add login functionality here
-    return render_template('login.html')
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and check_password_hash(user.password_hash ,form.password.data):
+            login_user(user)
+            return redirect(url_for('main_page.recharge'))
+    return render_template('login.html', form=form)
 
+# Route for recharge
 @main_page.route('/recharge', methods=['GET', 'POST'])
 def recharge():
-    if request.method == 'POST':
-        amount = request.form['amount']
-        user = User.query.first()  # Get the current logged-in user
-        user.balance += float(amount)  # Add the recharge amount to the user's balance
-        transaction = Transaction(user_id=user.id, amount=float(amount))
-        db.session.add(transaction)
+    form = RechargeForm()
+    if form.validate_on_submit():
+        current_user.balance += form.amount.data
         db.session.commit()
-        return redirect(url_for('main_page.index'))
-    return render_template('recharge.html')
+        return redirect(url_for('main_page.submit_task'))
+    return render_template('recharge.html', form=form)
 
 @main_page.route('/submit_task', methods=['GET', 'POST'])
+@login_required 
 def submit_task():
     if request.method == 'POST':
-        prompt = request.form['prompt']
-        user = User.query.first()  # Get the current logged-in user
-        if user.balance <= 0:
+        prompt = request.form['text_to_summarize']
+        
+        if current_user.balance <= 0:
             return jsonify({"message": "Insufficient balance"}), 400
-        user.balance -= 10  # Deduct 10 credits per task
+        print(f"Balance before deduction: {current_user.balance}")
+        current_user.balance -= 10
         db.session.commit()
+        print(f"Balance after deduction: {current_user.balance}")
 
         # Summarize the text
         summary = summarize_text(prompt)
         
         # Save the task in the database
-        task = MLTask(user_id=user.id, prompt=prompt, result=summary)
+        task = MLTask(user_id=current_user.id, prompt=prompt, result=summary)
         db.session.add(task)
         db.session.commit()
 
         return render_template('submit_task.html', summary=summary)
     return render_template('submit_task.html')
+
+@main_page.route('/admin/view_users')
+def view_users():
+    users = User.query.all()
+    user_list = [{"id": user.id, "username": user.username, "balance": user.balance} for user in users]
+    return jsonify(user_list)

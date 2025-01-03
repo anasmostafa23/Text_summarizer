@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Register</h1>
+    <h1>Login</h1>
     
-    <form method="POST" action="/register">
+    <form method="POST" action="/login">
         {{ form.hidden_tag() }}
         
         <div>
@@ -23,8 +23,6 @@
                 </ul>
             {% endif %}
         </div>
-
-        
 
         <div>
             <label for="password">Password</label>
@@ -43,6 +41,6 @@
         </div>
     </form>
     
-    <p>Already have an account? <a href="/login">Login here</a></p>
+    <p>Don't have an account? <a href="/register">Register here</a></p>
 </body>
 </html>
