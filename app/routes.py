@@ -65,6 +65,7 @@ def submit_task():
             # Save the task in the database
             task = MLTask(user_id=current_user.id, prompt=prompt, result=summary)
             db.session.add(task)
+            db.session.commit()
             print(f"Balance before deduction: {current_user.balance}")
             current_user.balance -= 10
             print(f"Balance after deduction: {current_user.balance}")
