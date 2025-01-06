@@ -61,10 +61,9 @@ def submit_task():
     if request.method == 'POST':
         prompt = request.form['text_to_summarize']
         ngrokUrl = request.form['ngrok_url']
-        print(f"Received prompt: {prompt}")
-        print(f"Received ngrokUrl: {ngrokUrl}")
         
-        if current_user.balance > 9:
+        
+        if current_user.balance >= 10:
              # Summarize the text
             summary = summarize_text(prompt, ngrokUrl)
             print('Recieved Summary {summary}')
@@ -118,3 +117,51 @@ def clear_history():
     db.session.commit()
 
     return redirect(url_for('main_page.dashboard'))  # Redirect to the dashboard after clearing history
+from flask import jsonify
+
+@main_page.route('/api/submit_task', methods=['POST'])
+def submit_task_tg():
+    data = request.json
+    user_id = data.get('user_id')
+    prompt = data.get('text_to_summarize')
+    ngrokUrl = data.get('ngrok_url')
+    
+    user = User.query.filter_by(id=user_id).first()
+    if user and user.balance >= 10:
+        summary = summarize_text(prompt, ngrokUrl)
+        task = MLTask(user_id=user.id, prompt=prompt, result=summary)
+        db.session.add(task)
+        user.balance -= 10
+        transaction = Transaction(user_id=user.id, amount=-10, transaction_type='debit')
+        db.session.add(transaction)
+        db.session.commit()
+        return jsonify({"summary": summary, "balance": user.balance}), 200
+    else:
+        return jsonify({"error": "Insufficient balance."}), 400
+
+
+@main_page.route('/api/recharge', methods=['POST'])
+def api_recharge():
+    data = request.json
+    user_id = data.get('user_id')
+    amount = data.get('amount')
+
+    if not user_id or not amount:
+        return jsonify({"error": "Missing user_id or amount"}), 400
+
+    user = User.query.filter_by(id=user_id).first()
+    
+    
+    if not user:
+        user = User(id=user_id, username=f'telegram_{user_id}', password_hash='placeholder', balance=0)
+        db.session.add(user)
+        db.session.commit()
+
+
+    # Add the recharge amount
+    user.balance += amount
+    transaction = Transaction(user_id=user.id, amount=amount, transaction_type='credit')
+    db.session.add(transaction)
+    db.session.commit()
+
+    return jsonify({"balance": user.balance}), 200

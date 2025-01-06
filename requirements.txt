@@ -19,3 +19,4 @@ flask-admin
 flask-login
 python-dotenv
 pytz
+python-telegram-bot==20.1
