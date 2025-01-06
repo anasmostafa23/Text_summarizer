@@ -51,6 +51,8 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.datetime.now())
+    transaction_type = db.Column(db.String(50), nullable=False)  
+
 
 class MLTask(db.Model):
     id = db.Column(db.Integer, primary_key=True)

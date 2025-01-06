@@ -37,14 +37,18 @@ def login():
     return render_template('login.html', form=form)
 
 # Route for recharge
+
 @main_page.route('/recharge', methods=['GET', 'POST'])
+@login_required
 def recharge():
     form = RechargeForm()
     if form.validate_on_submit():
-        print(f"This is current_user on recharge: {current_user}")
-        current_user.balance += form.amount.data
+        amount = form.amount.data
+        current_user.balance += amount
+        transaction = Transaction(user_id=current_user.id, amount=amount, transaction_type='credit')
+        db.session.add(transaction)
         db.session.commit()
-        return redirect(url_for('main_page.submit_task'))
+        return redirect(url_for('main_page.dashboard'))
     return render_template('recharge.html', form=form)
 
 @main_page.route('/submit_task', methods=['GET', 'POST'])
