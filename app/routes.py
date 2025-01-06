@@ -10,7 +10,9 @@ main_page = Blueprint('main_page', __name__,template_folder="static")
 
 @main_page.route('/')
 def index():
-    return render_template('index.html')
+    if current_user.is_authenticated:
+        return redirect(url_for('main_page.dashboard'))  # Redirect to dashboard if logged in
+    return render_template('index.html')  # Show home page for unauthenticated users
 
 
 # Route for registration
@@ -33,7 +35,7 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user and check_password_hash(user.password_hash ,form.password.data):
             login_user(user)
-            return redirect(url_for('main_page.recharge'))
+            return redirect(url_for('main_page.dashboard'))
     return render_template('login.html', form=form)
 
 # Route for recharge
@@ -62,7 +64,7 @@ def submit_task():
         print(f"Received prompt: {prompt}")
         print(f"Received ngrokUrl: {ngrokUrl}")
         
-        if current_user.balance > 0:
+        if current_user.balance > 9:
              # Summarize the text
             summary = summarize_text(prompt, ngrokUrl)
             print('Recieved Summary {summary}')
@@ -97,3 +99,22 @@ def dashboard():
     transactions = Transaction.query.filter_by(user_id=current_user.id).all()
     return render_template('dashboard.html', balance=current_user.balance, tasks=tasks, transactions=transactions)
 
+@main_page.route('/logout')
+@login_required
+def logout():
+    logout_user()  # Log out the current user
+    return redirect(url_for('main_page.index'))  # Redirect to home or login page
+
+# Add the clear history route
+@main_page.route('/clear_history', methods=['POST'])
+@login_required
+def clear_history():
+    # Get the current user
+    user = current_user
+    # Delete all tasks for the current user
+    tasks = MLTask.query.filter_by(user_id=user.id).all()
+    for task in tasks:
+        db.session.delete(task)
+    db.session.commit()
+
+    return redirect(url_for('main_page.dashboard'))  # Redirect to the dashboard after clearing history

@@ -1,5 +1,6 @@
 <h2>Balance: {{ balance }}</h2>
-<a href="/recharge">Recharge Balance</a>
+<a href="/recharge">Recharge balance</a>
+<a href="/submit_task">New task</a>
 
 <h2>Summarization History</h2>
 <table>
@@ -34,3 +35,21 @@
     </tr>
     {% endfor %}
 </table>
+<br>
+<form id="clear-history-form" method="POST" action="{{ url_for('main_page.clear_history') }}">
+    <button type="button" onclick="confirmClearHistory()">Clear History</button>
+</form>
+<!-- JavaScript to show confirmation dialog -->
+<script>
+    function confirmClearHistory() {
+        var confirmation = confirm("Are you sure you want to clear your history? This action cannot be undone.");
+        if (confirmation) {
+            // If the user confirms, submit the form
+            document.getElementById("clear-history-form").submit();
+        }
+    }
+</script>
+<br>
+<a href="/logout">Log out</a>
+
+
