@@ -2,6 +2,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import UserMixin
 import datetime
+from zoneinfo import ZoneInfo
+from datetime import datetime
+
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -50,7 +53,8 @@ class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.datetime.now())
+    timestamp = db.Column(db.DateTime, default=datetime.now())
+
     transaction_type = db.Column(db.String(50), nullable=False)  
 
 
@@ -58,5 +62,4 @@ class MLTask(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     prompt = db.Column(db.String, nullable=False)
-    status = db.Column(db.String, default="Pending")
     result = db.Column(db.Text)

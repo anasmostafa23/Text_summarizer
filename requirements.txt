@@ -18,3 +18,4 @@ torch
 flask-admin
 flask-login
 python-dotenv
+pytz

@@ -72,6 +72,8 @@ def submit_task():
             db.session.commit()
             print(f"Balance before deduction: {current_user.balance}")
             current_user.balance -= 10
+            transaction = Transaction(user_id=current_user.id, amount=-10, transaction_type='debit')
+            db.session.add(transaction)
             print(f"Balance after deduction: {current_user.balance}")
             db.session.commit()
             return render_template('submit_task.html', summary=summary, prompt=prompt, ngrokUrl=ngrokUrl)
@@ -87,3 +89,11 @@ def view_users():
     users = User.query.all()
     user_list = [{"id": user.id, "username": user.username, "balance": user.balance} for user in users]
     return jsonify(user_list)
+
+@main_page.route('/dashboard')
+@login_required
+def dashboard():
+    tasks = MLTask.query.filter_by(user_id=current_user.id).all()
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+    return render_template('dashboard.html', balance=current_user.balance, tasks=tasks, transactions=transactions)
+

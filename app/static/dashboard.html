@@ -1,0 +1,36 @@
+<h2>Balance: {{ balance }}</h2>
+<a href="/recharge">Recharge Balance</a>
+
+<h2>Summarization History</h2>
+<table>
+    <tr>
+        <th>Task ID</th>
+        <th>Prompt</th>
+        <th>Result</th>
+    </tr>
+    {% for task in tasks %}
+    <tr>
+        <td>{{ task.id }}</td>
+        <td>{{ task.prompt }}</td>
+        <td>{{ task.result }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Balance History</h2>
+<table>
+    <tr>
+        <th>Transaction ID</th>
+        <th>Amount</th>
+        <th>Type</th>
+        <th>Date</th>
+    </tr>
+    {% for transaction in transactions %}
+    <tr>
+        <td>{{ transaction.id }}</td>
+        <td>{{ transaction.amount }}</td>
+        <td>{{ transaction.transaction_type }}</td>
+        <td>{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S %Z') }}</td>
+    </tr>
+    {% endfor %}
+</table>
