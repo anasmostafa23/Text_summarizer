@@ -11,6 +11,10 @@ body {
     height: 100vh;
 }
 
+h1, h2, h3, h4, h5, h6, p, a, label, input, button {
+    font-family: inherit;
+}
+
 h1 {
     font-size: 36px;
     color: #333;
@@ -61,7 +65,7 @@ form {
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(150, 21, 21, 0.1);
     width: 300px;
     display: flex;
     flex-direction: column;
@@ -121,3 +125,25 @@ button:hover {
         font-size: 16px;
     }
 }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  #task-table-container, #transaction-table-container {
+    max-height: 300px; /* Adjust the height as needed */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+  }
+
+  button {
+    margin-top: 10px;
+  }
+

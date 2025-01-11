@@ -3,6 +3,7 @@ import json
 from app.utils import *
 from app.database import *
 from run import app
+from flask import flash
 # RabbitMQ connection parameters
 connection_params = pika.ConnectionParameters(
     host='localhost',  # Replace with your RabbitMQ server address
@@ -32,6 +33,7 @@ with app.app_context():
             task = MLTask(user_id=user_id, prompt=prompt, result=summary)
             db.session.add(task)
             db.session.commit()
+        
 
         ch.basic_ack(delivery_tag=method.delivery_tag)  # Acknowledge the message
 

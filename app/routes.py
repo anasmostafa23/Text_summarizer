@@ -170,3 +170,23 @@ def api_recharge():
     db.session.commit()
 
     return jsonify({"balance": user.balance}), 200
+
+@main_page.route('/load_more_tasks')
+def load_more_tasks():
+    start = int(request.args.get('start', 0))
+    count = int(request.args.get('count', 3))
+    tasks = MLTask.query.offset(start).limit(count).all()
+    task_data = [{'id': t.id, 'prompt': t.prompt, 'result': t.result} for t in tasks]
+    return jsonify(tasks=task_data)
+
+@main_page.route('/load_more_transactions')
+def load_more_transactions():
+    start = int(request.args.get('start', 0))
+    count = int(request.args.get('count', 10))
+    transactions = Transaction.query.offset(start).limit(count).all()
+    transaction_data = [
+        {'id': t.id, 'amount': t.amount, 'transaction_type': t.transaction_type, 
+         'timestamp': t.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
+        for t in transactions
+    ]
+    return jsonify(transactions=transaction_data)

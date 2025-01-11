@@ -1,43 +1,101 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
 <h2>Balance: {{ balance }}</h2>
-<a href="/recharge">Recharge balance</a>
-<a href="/submit_task">New task</a>
+<a href="/recharge">Recharge balance</a><br><br>
+<a href="/submit_task">New task</a><br><br>
+<a href="/logout">Log out</a><br><br>
 
 <h2>Summarization History</h2>
-<table>
-    <tr>
-        <th>Task ID</th>
-        <th>Prompt</th>
-        <th>Result</th>
-    </tr>
-    {% for task in tasks %}
-    <tr>
-        <td>{{ task.id }}</td>
-        <td>{{ task.prompt }}</td>
-        <td>{{ task.result }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<div id="task-table-container">
+
+    <table id="task-table">
+        <tr>
+            <th>Task ID</th>
+            <th>Prompt</th>
+            <th>Result</th>
+        </tr>
+        {% for task in tasks[:10] %}
+        <tr>
+            <td>{{ task.id }}</td>
+            <td>{{ task.prompt }}</td>
+            <td>{{ task.result }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% if tasks|length > 10 %}
+<button id="task-show-more" onclick="loadMoreTasks()">Show More</button>
+{% endif %}
 
 <h2>Balance History</h2>
-<table>
-    <tr>
-        <th>Transaction ID</th>
-        <th>Amount</th>
-        <th>Type</th>
-        <th>Date</th>
-    </tr>
-    {% for transaction in transactions %}
-    <tr>
-        <td>{{ transaction.id }}</td>
-        <td>{{ transaction.amount }}</td>
-        <td>{{ transaction.transaction_type }}</td>
-        <td>{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S %Z') }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<div id="transaction-table-container">
+
+    <table id="transaction-table">
+        <tr>
+            <th>Transaction ID</th>
+            <th>Amount</th>
+            <th>Type</th>
+            <th>Date</th>
+        </tr>
+        {% for transaction in transactions[:10] %}
+        <tr>
+            <td>{{ transaction.id }}</td>
+            <td>{{ transaction.amount }}</td>
+            <td>{{ transaction.transaction_type }}</td>
+            <td>{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S %Z') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% if transactions|length > 10 %}
+<button id="transaction-show-more" onclick="loadMoreTransactions()">Show More</button>
+{% endif %}
+
+<script>
+    let taskIndex = 10;
+    let transactionIndex = 10;
+    
+    function loadMoreTasks() {
+        fetch(`/load_more_tasks?start=${taskIndex}&count=10`)
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('task-table');
+                const rows = data.tasks.map(task => 
+                    `<tr><td>${task.id}</td><td>${task.prompt}</td><td>${task.result}</td></tr>`
+                ).join('');
+                table.insertAdjacentHTML('beforeend', rows);
+                taskIndex += 10;
+                if (data.tasks.length < 10) {
+                    document.getElementById('task-show-more').style.display = 'none';
+                }
+            });
+    }
+    
+    function loadMoreTransactions() {
+        fetch(`/load_more_transactions?start=${transactionIndex}&count=10`)
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('transaction-table');
+                const rows = data.transactions.map(transaction => 
+                    `<tr><td>${transaction.id}</td><td>${transaction.amount}</td><td>${transaction.transaction_type}</td><td>${transaction.timestamp}</td></tr>`
+                ).join('');
+                table.insertAdjacentHTML('beforeend', rows);
+                transactionIndex += 10;
+                if (data.transactions.length < 10) {
+                    document.getElementById('transaction-show-more').style.display = 'none';
+                }
+            });
+    }
+    </script>
+    
 <br>
 <form id="clear-history-form" method="POST" action="{{ url_for('main_page.clear_history') }}">
-    <button type="button" onclick="confirmClearHistory()">Clear History</button>
+    <button type="button" onclick="confirmClearHistory()">Clear Summarization History</button>
 </form>
 <!-- JavaScript to show confirmation dialog -->
 <script>
@@ -50,6 +108,6 @@
     }
 </script>
 <br>
-<a href="/logout">Log out</a>
+
 
 

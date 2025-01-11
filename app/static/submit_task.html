@@ -2,18 +2,18 @@
 <html>
   <head>
     <title>ML Service</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='styles.css') }}"
-    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body>
     <h1>Welcome to the ML Service</h1>
-    <p>Submit prompts, view tasks, and manage your account.</p>
+    <p>Submit prompts, view tasks, and manage your account.</p><br>
+    <a href="https://colab.research.google.com/drive/1kDspLli6dwIhXVFhr5Wk-T3tlUKFHWGG" target="_blank" rel="noopener noreferrer">bart-large-cnn text summariztion model on Google Collab notebook,Run it and copy the Ngrok link</a><br><br>
+    <p>Make sure the text to process is no more than 2500 characters</p>
 
-    {% if error%}
-    <p><strong>{{error}}</strong></p>
-    {% endif%}
+
+    {% if error %}
+    <p><strong>{{ error }}</strong></p>
+    {% endif %}
 
     <!-- Text Summarization Form -->
     <form id="summarize-form" method="POST" action="/submit_task">
@@ -22,48 +22,44 @@
         type="text"
         id="ngrok_url"
         name="ngrok_url"
-        {%
-        if
-        ngrokUrl
-        %}
-        value="{{ngrokUrl}}"
-        {%
-        endif
-        %}
         required
       />
+      <button type="button" id="save-ngrok-url">Save</button>
       <label for="text_to_summarize">Enter Text to Summarize:</label>
       <textarea
         id="text_to_summarize"
         name="text_to_summarize"
         rows="4"
         required
-      >
-{{prompt}}</textarea
-      >
+      >{{ prompt }}</textarea>
       <button type="submit">Summarize</button>
     </form>
 
-    <!-- Display the summarized text -->
-    <h3>Summary:</h3>
-    <div id="summary-result">{% if summary %} {{summary}} {% endif %}</div>
-
+    
     <script>
-      // Handle Summarization request
-      document
-        .getElementById("summarize-form")
-        .addEventListener("submit", function (event) {
-          const textToSummarize =
-            document.getElementById("text_to_summarize").value;
-          const ngrokURL = localStorage.getItem("ngrok_url"); // Retrieve URL from local storage
+      // Load saved Ngrok URL on page load
+      document.addEventListener('DOMContentLoaded', function () {
+        const savedNgrokUrl = localStorage.getItem('ngrok_url');
+        if (savedNgrokUrl) {
+          document.getElementById('ngrok_url').value = savedNgrokUrl;
+        }
+      });
 
-          if (!ngrokURL) {
-            event.preventDefault();
-            alert("Please enter the Ngrok URL first!");
-            return;
-          }
-        });
+      // Save Ngrok URL to localStorage
+      document.getElementById('save-ngrok-url').addEventListener('click', function () {
+        const ngrokUrl = document.getElementById('ngrok_url').value;
+        if (ngrokUrl) {
+          localStorage.setItem('ngrok_url', ngrokUrl);
+          alert('Ngrok URL saved successfully!');
+        } else {
+          alert('Please enter a valid Ngrok URL.');
+        }
+      });
+      document.getElementById('summarize-form').addEventListener('submit', function () {
+    alert('The summarized text will appear in your history in a few minutes!');
+  });
     </script>
-    <a href="/dashboard">Back to dashboard</a>
+
+    <br><br><a href="/dashboard">Back to dashboard</a>
   </body>
 </html>
