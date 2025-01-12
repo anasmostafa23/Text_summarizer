@@ -10,16 +10,17 @@ FLASK_API_URL = os.getenv('FLASK_API_URL')  # URL of your existing Flask app (e.
 
 async def set_ngrok(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Set the ngrok URL."""
-    global ngrok_url
+    
     if context.args:
         ngrok_url = context.args[0]
+        context.user_data['ngrok_url'] = ngrok_url
         await update.message.reply_text(f'Ngrok URL set to: {ngrok_url}')
     else:
         await update.message.reply_text('Please provide a valid ngrok URL.')
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start command, welcome the user."""
-    await update.message.reply_text('Welcome to the Summarization Bot! Use /set_ngrok <url> to set the service URL.')
+    await update.message.reply_text('Welcome to the Summarization Bot! Use /help to see commands!')
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Help command, displays all available commands."""
@@ -28,8 +29,8 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "/start - Welcome message and bot introduction\n"
         "/set_ngrok <url> - Set the ngrok URL for the summarization service\n"
         "/summarize <text> - Summarize the provided text\n"
-        "/recharge <amount> - Recharge your balance with the specified amount\n"
-        "/help - Show this help message"
+        "/recharge <amount> - Recharge your balance with the specified amount or leave empty to know balance.\n"
+        "/help - Show this help message\n/latest_result to see the latest submission result"
     )
     await update.message.reply_text(help_text)
 
@@ -37,28 +38,22 @@ async def summarize(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Summarize the provided text."""
     user_id = update.message.from_user.id
     text = ' '.join(context.args)
-    global ngrok_url
+    ngrok_url = context.user_data.get('ngrok_url')
 
     if not text:
         await update.message.reply_text('Please provide text to summarize.')
         return
 
-    if not ngrok_url:
-        await update.message.reply_text('Ngrok URL not set. Use /set_ngrok <url> first.')
-        return
+    
 
-    # Send a POST request to the Flask app's /submit_task endpoint
     response = requests.post(f"{FLASK_API_URL}/api/submit_task", json={
-        "user_id": user_id,  # Simulate passing user data
-        "text_to_summarize": text, 
+        "user_id": user_id,
+        "text_to_summarize": text,
         "ngrok_url": ngrok_url
     })
 
     if response.status_code == 200:
-        data = response.json()
-        summary = data.get('summary', 'No summary returned')
-        new_balance = data.get('balance', 'unknown')
-        await update.message.reply_text(f'Summary: {summary}\nRemaining Balance: {new_balance}')
+        await update.message.reply_text('Task submitted successfully! Check your history in a few minutes.')
     elif response.status_code == 400:
         error_message = response.json().get('error', 'Error processing request')
         await update.message.reply_text(f'Error: {error_message}')
@@ -66,19 +61,50 @@ async def summarize(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text('Error: Failed to process the task.')
 
 async def recharge(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Recharge the user's balance."""
-    amount = float(context.args[0]) if context.args else 0
+    """Recharge the user's balance or show current balance if no amount is provided."""
     user_id = update.message.from_user.id
 
-    # Send a request to Flask API to recharge balance
-    response = requests.post(f"{FLASK_API_URL}/api/recharge", json={"user_id": user_id, "amount": amount})
+    if context.args:
+        try:
+            amount = float(context.args[0])
+        except ValueError:
+            await update.message.reply_text('Invalid amount. Please enter a valid number.')
+            return
 
+        # Send a request to Flask API to recharge balance
+        response = requests.post(f"{FLASK_API_URL}/api/recharge", json={"user_id": user_id, "amount": amount})
+
+        if response.status_code == 200:
+            new_balance = response.json().get('balance', 'unknown')
+            await update.message.reply_text(f'Balance updated. New balance: {new_balance}')
+        else:
+            await update.message.reply_text('Error: Failed to recharge.')
+    else:
+        # Fetch the current balance if no amount is provided
+        response = requests.get(f"{FLASK_API_URL}/api/balance", json={"user_id": user_id})
+
+        if response.status_code == 200:
+            balance = response.json().get('balance', 'unknown')
+            await update.message.reply_text(f'Your current balance is: {balance}')
+        else:
+            await update.message.reply_text('Error: Failed to retrieve balance.')
+
+async def latest_result(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Fetch and display the latest task result."""
+    user_id = update.message.from_user.id
+
+    response = requests.get(f"{FLASK_API_URL}/api/latest_result", json={"user_id": user_id})
 
     if response.status_code == 200:
-        new_balance = response.json().get('balance')
-        await update.message.reply_text(f'Balance updated. New balance: {new_balance}')
+        data = response.json()
+        summary = data.get('summary', 'No summary available')
+        prompt = data.get('prompt', 'No prompt available')
+        await update.message.reply_text(f"Prompt: {prompt}\nSummary: {summary}")
+    elif response.status_code == 404:
+        await update.message.reply_text('No recent tasks found.')
     else:
-        await update.message.reply_text('Error: Failed to recharge.')
+        await update.message.reply_text('Error: Failed to fetch the latest result.')
+
 
 def main():
     # Initialize the bot and dispatcher
@@ -90,6 +116,7 @@ def main():
     application.add_handler(CommandHandler('summarize', summarize))
     application.add_handler(CommandHandler('recharge', recharge))
     application.add_handler(CommandHandler('help', help))  # Added help command
+    application.add_handler(CommandHandler('latest_result', latest_result))
 
     # Start polling for new messages
     application.run_polling()

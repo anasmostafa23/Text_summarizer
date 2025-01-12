@@ -95,7 +95,7 @@ def submit_task_tg():
         try : 
         
             task_data = {
-                    'user_id': current_user.id,
+                    'user_id': user.id,
                     'prompt': prompt,
                     'ngrok_url': ngrokUrl
                 }
@@ -106,6 +106,8 @@ def submit_task_tg():
         
     else:
         return jsonify({"error": "Insufficient balance."}), 400
+    
+
 
 @main_page.route('/admin/view_users')
 def view_users():
@@ -187,3 +189,21 @@ def load_more_transactions():
         for t in transactions
     ]
     return jsonify(transactions=transaction_data)
+
+@main_page.route('/api/balance', methods=['GET'])
+def get_balance():
+    user_id = request.json.get('user_id')
+    user = User.query.filter_by(id=user_id).first()
+    if user:
+        return jsonify({"balance": user.balance}), 200
+    else:
+        return jsonify({"error": "User not found."}), 404
+
+@main_page.route('/api/latest_result', methods=['GET'])
+def latest_result():
+    user_id = request.json.get('user_id')
+    latest_task = MLTask.query.filter_by(user_id=user_id).order_by(MLTask.id.desc()).first()
+    if latest_task:
+        return jsonify({"prompt": latest_task.prompt, "summary": latest_task.result}), 200
+    else:
+        return jsonify({"error": "No recent tasks found."}), 404
