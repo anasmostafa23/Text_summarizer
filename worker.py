@@ -3,7 +3,9 @@ import json
 from app.utils import *
 from app.database import *
 from run import app
-from flask import flash
+from sqlalchemy.exc import SQLAlchemyError
+
+
 # RabbitMQ connection parameters
 connection_params = pika.ConnectionParameters(
     host='localhost',  # Replace with your RabbitMQ server address
@@ -18,24 +20,52 @@ connection_params = pika.ConnectionParameters(
 )
 with app.app_context():
 
-    def callback(ch, method, properties, body):
-        """Callback function to handle tasks from the queue."""
-        task_data = json.loads(body)
-        user_id = task_data.get('user_id')
-        prompt = task_data.get('prompt')
-        ngrok_url = task_data.get('ngrok_url')
-        print(f"**********************************{ngrok_url}***************************************************")
-        summary = summarize_text(prompt, ngrok_url)
-        
-        # Store the result in the database
-        user = User.query.filter_by(id=user_id).first()
-        if user:
-            task = MLTask(user_id=user_id, prompt=prompt, result=summary)
-            db.session.add(task)
-            db.session.commit()
-        
 
-        ch.basic_ack(delivery_tag=method.delivery_tag)  # Acknowledge the message
+    def process_task_with_balance_deduction(user_id, prompt, result_summary):
+        """Deduct balance in the worker after successfully processing the task."""
+        user = User.query.filter_by(id=user_id).with_for_update().first()
+        if user and user.balance >= 10:
+            try:
+                # Deduct balance only after processing
+                user.balance -= 10
+                transaction = Transaction(user_id=user.id, amount=-10, transaction_type='debit')
+                db.session.add(transaction)
+
+                task = MLTask(user_id=user.id, prompt=prompt, result=result_summary)
+                db.session.add(task)
+
+                db.session.commit()  # Commit all changes together
+                return True
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                print(f"Error processing task or updating balance: {e}")
+                return False
+        else:
+            print("Insufficient balance or user not found.")
+            return False
+
+    def callback(ch, method, properties, body):
+        """Callback function with balance deduction logic."""
+        try:
+            task_data = json.loads(body)
+            user_id = task_data.get('user_id')
+            prompt = task_data.get('prompt')
+            ngrok_url = sanitize_url(task_data.get('ngrok_url'))
+            summary = summarize_text(prompt, ngrok_url)
+            
+            if summary :
+        
+                process_task_with_balance_deduction(user_id, prompt, summary)
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+
+            else:
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+
+
 
     def worker_task():
         """Set up the worker to consume tasks from the queue."""

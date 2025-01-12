@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, Response , flash
 from .database import User, Transaction, MLTask , db 
-from .utils import summarize_text
+from .utils import sanitize_url
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from .forms import RegistrationForm, LoginForm, RechargeForm
@@ -66,10 +66,7 @@ def submit_task():
         
         
         if current_user.balance >= 10:
-            current_user.balance -= 10
-            transaction = Transaction(user_id=current_user.id, amount=-10, transaction_type='debit')
-            db.session.add(transaction)
-            db.session.commit()
+            
             task_data = {
                 'user_id': current_user.id,
                 'prompt': prompt,
@@ -84,6 +81,31 @@ def submit_task():
             return render_template('submit_task.html', error=error, prompt=prompt, ngrokUrl=ngrokUrl)
 
     return render_template('submit_task.html')
+
+
+@main_page.route('/api/submit_task', methods=['POST'])
+def submit_task_tg():
+    data = request.json
+    user_id = data.get('user_id')
+    prompt = data.get('text_to_summarize')
+    ngrokUrl = sanitize_url(data.get('ngrok_url'))
+    
+    user = User.query.filter_by(id=user_id).first()
+    if user and user.balance >= 10:
+        try : 
+        
+            task_data = {
+                    'user_id': current_user.id,
+                    'prompt': prompt,
+                    'ngrok_url': ngrokUrl
+                }
+            publish_task_to_queue(task_data)
+            return jsonify({"message": "Task submitted successfully! Processing will begin shortly."}), 200
+        except Exception as e:
+                return jsonify({"error": "Failed to submit task.", "details": str(e)}), 500
+        
+    else:
+        return jsonify({"error": "Insufficient balance."}), 400
 
 @main_page.route('/admin/view_users')
 def view_users():
@@ -117,31 +139,6 @@ def clear_history():
     db.session.commit()
 
     return redirect(url_for('main_page.dashboard'))  # Redirect to the dashboard after clearing history
-
-@main_page.route('/api/submit_task', methods=['POST'])
-def submit_task_tg():
-    data = request.json
-    user_id = data.get('user_id')
-    prompt = data.get('text_to_summarize')
-    ngrokUrl = data.get('ngrok_url')
-    
-    user = User.query.filter_by(id=user_id).first()
-    if user and user.balance >= 10:
-        user.balance -= 10
-        transaction = Transaction(user_id=user.id, amount=-10, transaction_type='debit')
-        db.session.add(transaction)
-        db.session.commit()
-        task_data = {
-                'user_id': current_user.id,
-                'prompt': prompt,
-                'ngrok_url': ngrokUrl
-            }
-        publish_task_to_queue(task_data)
-        flash('Task submitted successfully! The result will be available soon.')
-        return jsonify({"message": "Task submitted successfully! Processing will begin shortly.", "balance": user.balance}), 200
-    else:
-        return jsonify({"error": "Insufficient balance."}), 400
-
 
 @main_page.route('/api/recharge', methods=['POST'])
 def api_recharge():

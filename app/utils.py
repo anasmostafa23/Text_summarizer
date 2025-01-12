@@ -1,5 +1,10 @@
-import os
+import os , re
 import requests
+
+def sanitize_url(url):
+        """Sanitize ngrok_url to remove whitespace and special characters."""
+        sanitized_url = re.sub(r'[^\w:/.-]', '', url).strip()  # Allow only typical URL characters
+        return sanitized_url
 
 def summarize_text(text, ngrokUrl):
     """Send text to the external summarization service and return the summary."""
@@ -8,6 +13,7 @@ def summarize_text(text, ngrokUrl):
 
     print('Passed ngrokUrl: ', ngrokUrl)
     
+    
     payload = {"text": text}
     response = requests.post(f"{ngrokUrl}/summarize", json=payload)
     
@@ -15,3 +21,5 @@ def summarize_text(text, ngrokUrl):
         return response.json().get("summary", "No summary provided.")
     else:
         raise RuntimeError(f"Summarization failed: {response.status_code} - {response.text}")
+    
+    
