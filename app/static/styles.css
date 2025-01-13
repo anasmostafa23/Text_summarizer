@@ -8,7 +8,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    overflow-y: scroll;
 }
 
 h1, h2, h3, h4, h5, h6, p, a, label, input, button {
@@ -128,6 +128,7 @@ button:hover {
 
   table {
     width: 100%;
+    height: 100%;
     border-collapse: collapse;
   }
   
@@ -138,7 +139,8 @@ button:hover {
   }
   
   #task-table-container, #transaction-table-container {
-    max-height: 300px; /* Adjust the height as needed */
+    height: 500px; /* Adjust the height as needed */
+
     overflow-y: auto;
     border: 1px solid #ccc;
   }
