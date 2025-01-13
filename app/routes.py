@@ -5,6 +5,8 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from .forms import RegistrationForm, LoginForm, RechargeForm
 from .tasks import *
+from datetime import datetime
+
 
 
 
@@ -118,8 +120,8 @@ def view_users():
 @main_page.route('/dashboard')
 @login_required
 def dashboard():
-    tasks = MLTask.query.filter_by(user_id=current_user.id).all()
-    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+    tasks = MLTask.query.filter_by(user_id=current_user.id).order_by(MLTask.id.desc()).all()
+    transactions = Transaction.query.filter_by(user_id=current_user.id).order_by(Transaction.id.desc()).all()
     return render_template('dashboard.html', balance=current_user.balance, tasks=tasks, transactions=transactions)
 
 @main_page.route('/logout')
@@ -174,7 +176,7 @@ def api_recharge():
 def load_more_tasks():
     start = int(request.args.get('start', 0))
     count = int(request.args.get('count', 3))
-    tasks = MLTask.query.offset(start).limit(count).all()
+    tasks = MLTask.query.order_by(MLTask.id.desc()).offset(start).limit(count).all()  # Order by ID descending
     task_data = [{'id': t.id, 'prompt': t.prompt, 'result': t.result} for t in tasks]
     return jsonify(tasks=task_data)
 
@@ -182,13 +184,14 @@ def load_more_tasks():
 def load_more_transactions():
     start = int(request.args.get('start', 0))
     count = int(request.args.get('count', 10))
-    transactions = Transaction.query.offset(start).limit(count).all()
+    transactions = Transaction.query.order_by(Transaction.id.desc()).offset(start).limit(count).all()  # Order by ID descending
     transaction_data = [
         {'id': t.id, 'amount': t.amount, 'transaction_type': t.transaction_type, 
          'timestamp': t.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
         for t in transactions
     ]
     return jsonify(transactions=transaction_data)
+
 
 @main_page.route('/api/balance', methods=['GET'])
 def get_balance():

@@ -52,13 +52,13 @@
         {% endfor %}
     </table>
 </div>
-{% if transactions|length > 10 %}
+{% if transactions %}
 <button id="transaction-show-more" onclick="loadMoreTransactions()">Show More</button>
 {% endif %}
 
 <script>
-    let taskIndex = 10;
-    let transactionIndex = 10;
+    let taskIndex = 14;
+    let transactionIndex = 14;
     
     function loadMoreTasks() {
         fetch(`/load_more_tasks?start=${taskIndex}&count=10`)
