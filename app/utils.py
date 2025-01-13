@@ -8,10 +8,7 @@ def sanitize_url(url):
 
 def summarize_text(text, ngrokUrl):
     """Send text to the external summarization service and return the summary."""
-    if(not ngrokUrl):
-        ngrokUrl = os.getenv('NGROK_URL') 
 
-    print('Passed ngrokUrl: ', ngrokUrl)
     
     
     payload = {"text": text}

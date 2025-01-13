@@ -1,9 +1,11 @@
+from flask import Config
 import pika
 import json
 from app.utils import *
 from app.database import *
 from run import app
 from sqlalchemy.exc import SQLAlchemyError
+
 
 
 # RabbitMQ connection parameters
@@ -50,7 +52,7 @@ with app.app_context():
             task_data = json.loads(body)
             user_id = task_data.get('user_id')
             prompt = task_data.get('prompt')
-            ngrok_url = sanitize_url(task_data.get('ngrok_url'))
+            ngrok_url = Config.NGROK_URL
             summary = summarize_text(prompt, ngrok_url)
             
             if summary :

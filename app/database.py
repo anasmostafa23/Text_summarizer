@@ -2,7 +2,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import UserMixin
 import datetime
-from zoneinfo import ZoneInfo
 from datetime import datetime
 
 
@@ -16,7 +15,6 @@ class User(UserMixin , db.Model):
     password_hash = db.Column(db.String(150), nullable=False)
     balance = db.Column(db.Float, default=0.0)
 
-    # Add other fields you need (e.g., balance, etc.)
     
     def __repr__(self):
         return f'<User {self.username}>'
@@ -24,9 +22,7 @@ class User(UserMixin , db.Model):
     def get_balance(self):
         return self.balance
     
-    def c(self, deductible):
-        self.balance -= deductible
-
+    
     # Flask-Login requires these methods:
 
     def get_id(self):

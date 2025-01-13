@@ -1,22 +1,15 @@
 import os
+from flask import Config
 import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-FLASK_API_URL = os.getenv('FLASK_API_URL')  # URL of your existing Flask app (e.g., "http://localhost:5000")
+BOT_TOKEN = Config.BOT_TOKEN
+FLASK_API_URL = Config.FLASK_API_URL  # URL of your existing Flask app (e.g., "http://localhost:5000")
+ngrok_url = Config.NGROK_URL
 
-async def set_ngrok(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Set the ngrok URL."""
-    
-    if context.args:
-        ngrok_url = context.args[0]
-        context.user_data['ngrok_url'] = ngrok_url
-        await update.message.reply_text(f'Ngrok URL set to: {ngrok_url}')
-    else:
-        await update.message.reply_text('Please provide a valid ngrok URL.')
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start command, welcome the user."""
@@ -27,7 +20,6 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     help_text = (
         "Here are the available commands:\n\n"
         "/start - Welcome message and bot introduction\n"
-        "/set_ngrok <url> - Set the ngrok URL for the summarization service\n"
         "/summarize <text> - Summarize the provided text\n"
         "/recharge <amount> - Recharge your balance with the specified amount or leave empty to know balance.\n"
         "/help - Show this help message\n/latest_result to see the latest submission result"
@@ -38,7 +30,7 @@ async def summarize(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Summarize the provided text."""
     user_id = update.message.from_user.id
     text = ' '.join(context.args)
-    ngrok_url = context.user_data.get('ngrok_url')
+    ngrok_url = Config.NGROK_URL
 
     if not text:
         await update.message.reply_text('Please provide text to summarize.')
@@ -112,7 +104,6 @@ def main():
 
     # Add command handlers
     application.add_handler(CommandHandler('start', start))
-    application.add_handler(CommandHandler('set_ngrok', set_ngrok))
     application.add_handler(CommandHandler('summarize', summarize))
     application.add_handler(CommandHandler('recharge', recharge))
     application.add_handler(CommandHandler('help', help))  # Added help command

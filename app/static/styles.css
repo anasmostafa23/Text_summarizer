@@ -171,3 +171,8 @@ button:hover {
 .expand-toggle:hover {
     background-color: #0056b3;
 }
+
+.text_to_summarize {
+    width: 1000px;
+    height: 1000px;
+}

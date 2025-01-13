@@ -5,7 +5,9 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from .forms import RegistrationForm, LoginForm, RechargeForm
 from .tasks import *
-from datetime import datetime
+from config import Config
+
+ngrok_url = Config.NGROK_URL
 
 
 
@@ -64,7 +66,7 @@ def submit_task():
     
     if request.method == 'POST':
         prompt = request.form['text_to_summarize']
-        ngrokUrl = request.form['ngrok_url']
+    
         
         
         if current_user.balance >= 10:
@@ -72,15 +74,15 @@ def submit_task():
             task_data = {
                 'user_id': current_user.id,
                 'prompt': prompt,
-                'ngrok_url': ngrokUrl
+                'ngrok_url': ngrok_url
             }
             publish_task_to_queue(task_data)
             flash('Task submitted successfully! The result will be available soon.')
-            return render_template('submit_task.html',prompt=prompt, ngrokUrl=ngrokUrl)
+            return render_template('submit_task.html',prompt=prompt)
 
         else:
             error = "Insufficient Balance."
-            return render_template('submit_task.html', error=error, prompt=prompt, ngrokUrl=ngrokUrl)
+            return render_template('submit_task.html', error=error, prompt=prompt)
 
     return render_template('submit_task.html')
 
@@ -90,7 +92,7 @@ def submit_task_tg():
     data = request.json
     user_id = data.get('user_id')
     prompt = data.get('text_to_summarize')
-    ngrokUrl = sanitize_url(data.get('ngrok_url'))
+    
     
     user = User.query.filter_by(id=user_id).first()
     if user and user.balance >= 10:
@@ -99,7 +101,7 @@ def submit_task_tg():
             task_data = {
                     'user_id': user.id,
                     'prompt': prompt,
-                    'ngrok_url': ngrokUrl
+                    'ngrok_url': ngrok_url 
                 }
             publish_task_to_queue(task_data)
             return jsonify({"message": "Task submitted successfully! Processing will begin shortly."}), 200

@@ -1,7 +1,8 @@
 import os
 import requests
+from config import Config
 
-ngrok_url = os.getenv('NGROK_URL', input("Enter Ngrok URL: ")) 
+ngrok_url = Config.NGROK_URL
 
 
 payload = {"text": "Sample text to summarize."}
