@@ -147,3 +147,25 @@ button:hover {
     margin-top: 10px;
   }
 
+.summary-text {
+    resize: vertical;  /* Allow resizing only vertically */
+    width: 100%;
+    padding: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+.expand-toggle {
+    margin-top: 10px;
+    padding: 5px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.expand-toggle:hover {
+    background-color: #0056b3;
+}
