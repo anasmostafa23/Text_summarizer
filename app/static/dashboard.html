@@ -37,14 +37,14 @@
 
     <table id="transaction-table">
         <tr>
-            <th>Transaction ID</th>
+            
             <th>Amount</th>
             <th>Type</th>
             <th>Date</th>
         </tr>
         {% for transaction in transactions[:10] %}
         <tr>
-            <td>{{ transaction.id }}</td>
+            
             <td>{{ transaction.amount }}</td>
             <td>{{ transaction.transaction_type }}</td>
             <td>{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S %Z') }}</td>
@@ -57,8 +57,8 @@
 {% endif %}
 
 <script>
-    let taskIndex = 14;
-    let transactionIndex = 14;
+    let taskIndex = 10;
+    let transactionIndex = 10;
     
     function loadMoreTasks() {
         fetch(`/load_more_tasks?start=${taskIndex}&count=10`)
@@ -82,7 +82,7 @@
             .then(data => {
                 const table = document.getElementById('transaction-table');
                 const rows = data.transactions.map(transaction => 
-                    `<tr><td>${transaction.id}</td><td>${transaction.amount}</td><td>${transaction.transaction_type}</td><td>${transaction.timestamp}</td></tr>`
+                    `<tr><td>${transaction.amount}</td><td>${transaction.transaction_type}</td><td>${transaction.timestamp}</td></tr>`
                 ).join('');
                 table.insertAdjacentHTML('beforeend', rows);
                 transactionIndex += 10;
