@@ -1,9 +1,9 @@
 import os
-from flask import Config
 import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from dotenv import load_dotenv
+from config import Config
 
 load_dotenv()  # Load environment variables from .env
 BOT_TOKEN = Config.BOT_TOKEN

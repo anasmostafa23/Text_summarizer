@@ -3,7 +3,7 @@ import json
 
 # Connection parameters for RabbitMQ
 connection_params = pika.ConnectionParameters(
-    host='localhost',  # RabbitMQ server address
+    host='rabbitmq',  # RabbitMQ server address
     port=5672,         # Default RabbitMQ port
     virtual_host='/',  # Virtual host
     credentials=pika.PlainCredentials(

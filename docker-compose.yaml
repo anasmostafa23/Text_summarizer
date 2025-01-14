@@ -1,17 +1,47 @@
-version: '3'
-
+version: '3.8'
 services:
+  flask-app:
+    build:
+      context: .
+      
+    ports:
+      - "5000:5000"
+    networks:
+      - default 
+    environment:
+      - NGROK_URL=${NGROK_URL}
+    depends_on:
+      - rabbitmq
+    volumes:
+      - .:/docker
+
+    
+
+
+  
   rabbitmq:
+    container_name: rabbitmq
     image: "rabbitmq:management"
     ports:
       - "15672:15672"  # RabbitMQ Management Plugin (web UI)
       - "5672:5672"    # RabbitMQ AMQP protocol port
+    expose:
+      - "5672"
+    networks:
+      - default 
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
+    
 volumes:
   rabbitmq_data:
     driver: local
+
+networks:
+  default: 
+    
+
+

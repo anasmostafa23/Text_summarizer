@@ -76,6 +76,7 @@ def submit_task():
                 'prompt': prompt,
                 'ngrok_url': ngrok_url
             }
+            print("sending to q")
             publish_task_to_queue(task_data)
             flash('Task submitted successfully! The result will be available soon.')
             return render_template('submit_task.html',prompt=prompt)
