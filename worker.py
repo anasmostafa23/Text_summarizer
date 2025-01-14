@@ -4,12 +4,22 @@ from app.utils import *
 from app.database import *
 from run import app
 from sqlalchemy.exc import SQLAlchemyError
-from config import Config
+from config import Config 
+import time
 
+
+def wait_for_rabbitmq(connection_params, retries=10, delay=10):
+    for i in range(retries):
+        try:
+            return pika.BlockingConnection(connection_params)
+        except pika.exceptions.AMQPConnectionError as e:
+            print(f"Attempt {i+1}/{retries} failed: Could not connect to RabbitMQ. Error: {e}")
+            time.sleep(delay)
+    raise Exception("Failed to connect to RabbitMQ after multiple attempts.")
 
 # RabbitMQ connection parameters
 connection_params = pika.ConnectionParameters(
-    host='localhost',  # Replace with your RabbitMQ server address
+    host='rabbitmq',  # Replace with your RabbitMQ server address
     port=5672,          # Default RabbitMQ port
     virtual_host='/',   # Virtual host (usually '/')
     credentials=pika.PlainCredentials(
@@ -72,7 +82,7 @@ with app.app_context():
 
     def worker_task():
         """Set up the worker to consume tasks from the queue."""
-        connection = pika.BlockingConnection(connection_params)  # Establish connection
+        connection = wait_for_rabbitmq(connection_params)  # Establish connection
         channel = connection.channel()
         
         # Declare the queue for the worker to listen to
