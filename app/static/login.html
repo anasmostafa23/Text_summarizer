@@ -9,6 +9,16 @@
 <body>
     <h1>Login</h1>
     
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
     <form method="POST" action="/login">
         {{ form.hidden_tag() }}
         
@@ -43,4 +53,3 @@
     
     <p>Don't have an account? <a href="/register">Register here</a></p>
 </body>
-</html>

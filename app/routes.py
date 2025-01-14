@@ -26,11 +26,15 @@ def index():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, password_hash= generate_password_hash(form.password.data ))
-        db.session.add(user)
-        db.session.commit()
-        login_user(user)
-        return redirect(url_for('main_page.recharge'))
+        existing_user = User.query.filter_by(username=form.username.data).first()
+        if existing_user:
+            flash('Username is already taken. Please choose a different one.', 'error')
+        else:
+            user = User(username=form.username.data, password_hash=generate_password_hash(form.password.data))
+            db.session.add(user)
+            db.session.commit()
+            login_user(user)
+            return redirect(url_for('main_page.recharge'))
     return render_template('register.html', form=form)
 
 # Route for login
@@ -39,10 +43,13 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        if user and check_password_hash(user.password_hash ,form.password.data):
+        if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user)
             return redirect(url_for('main_page.dashboard'))
+        else:
+            flash('Invalid username or password. Please try again.', 'error')
     return render_template('login.html', form=form)
+
 
 # Route for recharge
 

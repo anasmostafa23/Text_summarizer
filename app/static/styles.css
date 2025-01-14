@@ -176,3 +176,7 @@ button:hover {
     width: 1000px;
     height: 1000px;
 }
+.error {
+    color: red;
+    font-weight: bold;
+}
