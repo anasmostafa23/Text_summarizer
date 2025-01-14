@@ -1,6 +1,6 @@
 services:
   flask-app:
-    container_name: falsk-app
+    container_name: flask-app
     build:
       context: .
     ports:
@@ -36,7 +36,7 @@ services:
       
     volumes:
       - ./instance/app.db:/instance/app.db
-    command: python -u worker.py  # Run worker script
+    command: python -u worker.py  
     
   bot:
     build:
@@ -48,7 +48,7 @@ services:
       
     volumes:
       - ./instance/app.db:/instance/app.db
-    command: python -u bot.py  # Run worker script
+    command: python -u bot.py  
 
 volumes:
   rabbitmq_data:
