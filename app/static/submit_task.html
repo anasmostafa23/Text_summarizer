@@ -7,9 +7,8 @@
   <body>
     <h1>Welcome to the ML Service</h1>
     <p>Submit prompts, view tasks, and manage your account.</p><br>
-    <a href="https://colab.research.google.com/drive/1kDspLli6dwIhXVFhr5Wk-T3tlUKFHWGG" target="_blank" rel="noopener noreferrer">bart-large-cnn text summariztion model on Google Collab notebook</a><br><br>
+    <a href="https://colab.research.google.com/drive/1kDspLli6dwIhXVFhr5Wk-T3tlUKFHWGG" target="_blank" rel="noopener noreferrer">bart-large-cnn text summarization model on Google Colab notebook</a><br><br>
     <p>Make sure the text to process is no more than 2500 characters</p>
-
 
     {% if error %}
     <p><strong>{{ error }}</strong></p>
@@ -29,11 +28,36 @@
       <button type="submit">Summarize</button>
     </form>
 
-    
+    <p id="char-count-message" style="color: red;"></p>
+
     <script>
-      document.getElementById('summarize-form').addEventListener('submit', function () {
-    alert('The summarized text will appear in your history in a few minutes!');
-  });
+      // Get elements for validation
+      const textArea = document.getElementById('text_to_summarize');
+      const charCountMessage = document.getElementById('char-count-message');
+      const form = document.getElementById('summarize-form');
+
+      // Function to check character length
+      function checkTextLength() {
+        const textLength = textArea.value.length;
+        if (textLength > 2500) {
+          charCountMessage.textContent = 'Text is too long! Please limit your text to 2500 characters.';
+          form.querySelector('button').disabled = true; // Disable the submit button
+        } else {
+          charCountMessage.textContent = '';
+          form.querySelector('button').disabled = false; // Enable the submit button
+        }
+      }
+
+      // Add event listener to the textarea for input
+      textArea.addEventListener('input', checkTextLength);
+
+      // Initial check on page load
+      checkTextLength();
+
+      // Optional: Show an alert when the form is submitted
+      form.addEventListener('submit', function (event) {
+        alert('The summarized text will appear in your history in a few minutes!');
+      });
     </script>
 
     <br><br><a href="/dashboard">Back to dashboard</a>

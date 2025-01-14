@@ -36,6 +36,10 @@ async def summarize(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text('Please provide text to summarize.')
         return
 
+    if len(text) > 2500:
+        await update.message.reply_text(f'The provided text is too long. Please keep it under 2500 English characters.')
+        return
+
     
 
     response = requests.post(f"{FLASK_API_URL}/api/submit_task", json={
@@ -45,7 +49,7 @@ async def summarize(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     })
 
     if response.status_code == 200:
-        await update.message.reply_text('Task submitted successfully! Check your history in a few minutes.')
+        await update.message.reply_text('Task submitted successfully! Check your history in a few minutes use /latest_result !')
     elif response.status_code == 400:
         error_message = response.json().get('error', 'Error processing request')
         await update.message.reply_text(f'Error: {error_message}')
