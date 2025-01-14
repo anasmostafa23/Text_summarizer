@@ -10,10 +10,11 @@ services:
       - default 
     environment:
       - NGROK_URL=${NGROK_URL}
+      - DATABASE_URL=sqlite:///docker/app.db
     depends_on:
       - rabbitmq
     volumes:
-      - .:/docker
+      - ./instance/app.db:/docker/app.db
 
     
 
@@ -39,6 +40,8 @@ services:
 volumes:
   rabbitmq_data:
     driver: local
+
+  
 
 networks:
   default: 
