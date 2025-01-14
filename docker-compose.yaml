@@ -1,11 +1,13 @@
 services:
   flask-app:
+    container_name: falsk-app
     build:
       context: .
     ports:
       - "5000:5000"
     environment:
       - DATABASE_URL=sqlite:////instance/app.db
+      
     depends_on:
       - rabbitmq
     volumes:
@@ -31,11 +33,22 @@ services:
       - flask-app
     environment:
       - DATABASE_URL=sqlite:////instance/app.db
-    command: python -u worker.py  # Run worker script
-    
-
+      
     volumes:
       - ./instance/app.db:/instance/app.db
+    command: python -u worker.py  # Run worker script
+    
+  bot:
+    build:
+      context: .
+    depends_on:
+      - rabbitmq
+    environment:
+      - DATABASE_URL=sqlite:////instance/app.db
+      
+    volumes:
+      - ./instance/app.db:/instance/app.db
+    command: python -u bot.py  # Run worker script
 
 volumes:
   rabbitmq_data:

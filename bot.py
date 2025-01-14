@@ -111,6 +111,8 @@ def main():
 
     # Start polling for new messages
     application.run_polling()
+    print("bot is running...")
 
 if __name__ == '__main__':
     main()
+    
