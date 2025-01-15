@@ -1,4 +1,4 @@
-import os , re
+import re
 import requests
 
 def sanitize_url(url):

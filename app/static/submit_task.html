@@ -10,9 +10,12 @@
     <a href="https://colab.research.google.com/drive/1kDspLli6dwIhXVFhr5Wk-T3tlUKFHWGG" target="_blank" rel="noopener noreferrer">bart-large-cnn text summarization model on Google Colab notebook</a><br><br>
     <p>Make sure the text to process is no more than 2500 characters</p>
 
-    {% if error %}
+{% if error %}
     <p><strong>{{ error }}</strong></p>
-    {% endif %}
+{% endif %}
+{% if ok %}
+    <p><strong>Text submitted successfully, it will be in your history shortly! if not retry in a few minutes , balance deduction is made only after succsessful summarization.</strong></p>
+{% endif %}
 
     <!-- Text Summarization Form -->
     <form id="summarize-form" method="POST" action="/submit_task">
@@ -54,10 +57,7 @@
       // Initial check on page load
       checkTextLength();
 
-      // Optional: Show an alert when the form is submitted
-      form.addEventListener('submit', function (event) {
-        alert('The summarized text will appear in your history in a few minutes!');
-      });
+      
     </script>
 
     <br><br><a href="/dashboard">Back to dashboard</a>

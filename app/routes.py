@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, Response , flash
 from .database import User, Transaction, MLTask , db 
-from .utils import sanitize_url
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from .forms import RegistrationForm, LoginForm, RechargeForm
@@ -66,6 +65,46 @@ def recharge():
         return redirect(url_for('main_page.dashboard'))
     return render_template('recharge.html', form=form)
 
+@main_page.route('/api/recharge', methods=['POST'])
+def api_recharge():
+    data = request.json
+    user_id = data.get('user_id')
+    amount = data.get('amount')
+
+    if not user_id :
+        return jsonify({"error": "Missing user_id"}), 400
+    if not amount:
+        return jsonify({"balance": user.balance}), 200
+
+    user = User.query.filter_by(id=user_id).first()
+    
+    
+    if not user:
+        user = User(id=user_id, username=f'telegram_{user_id}', password_hash='placeholder', balance=0)
+        db.session.add(user)
+        db.session.commit()
+
+
+    # Add the recharge amount
+    user.balance += amount
+    transaction = Transaction(user_id=user.id, amount=amount, transaction_type='credit')
+    db.session.add(transaction)
+    db.session.commit()
+
+    return jsonify({"balance": user.balance}), 200
+
+
+@main_page.route('/api/balance', methods=['GET'])
+def get_balance():
+    user_id = request.json.get('user_id')
+    user = User.query.filter_by(id=user_id).first()
+    if user:
+        return jsonify({"balance": user.balance}), 200
+    else:
+        return jsonify({"error": "User not found."}), 404
+    
+
+
 @main_page.route('/submit_task', methods=['GET', 'POST'])
 @login_required 
 def submit_task():
@@ -85,11 +124,12 @@ def submit_task():
             }
             print("sending to q")
             publish_task_to_queue(task_data)
-            flash('Task submitted successfully! The result will be available soon.')
-            return render_template('submit_task.html',prompt=prompt)
+            ok= True
+            return render_template('submit_task.html',prompt=prompt,ok=ok)
 
         else:
             error = "Insufficient Balance."
+            flash('Insufficient Balance.')
             return render_template('submit_task.html', error=error, prompt=prompt)
 
     return render_template('submit_task.html')
@@ -121,11 +161,7 @@ def submit_task_tg():
     
 
 
-@main_page.route('/admin/view_users')
-def view_users():
-    users = User.query.all()
-    user_list = [{"id": user.id, "username": user.username, "balance": user.balance} for user in users]
-    return jsonify(user_list)
+
 
 @main_page.route('/dashboard')
 @login_required
@@ -154,33 +190,8 @@ def clear_history():
 
     return redirect(url_for('main_page.dashboard'))  # Redirect to the dashboard after clearing history
 
-@main_page.route('/api/recharge', methods=['POST'])
-def api_recharge():
-    data = request.json
-    user_id = data.get('user_id')
-    amount = data.get('amount')
 
-    if not user_id :
-        return jsonify({"error": "Missing user_id"}), 400
-    if not amount:
-        return jsonify({"balance": user.balance}), 200
-
-    user = User.query.filter_by(id=user_id).first()
     
-    
-    if not user:
-        user = User(id=user_id, username=f'telegram_{user_id}', password_hash='placeholder', balance=0)
-        db.session.add(user)
-        db.session.commit()
-
-
-    # Add the recharge amount
-    user.balance += amount
-    transaction = Transaction(user_id=user.id, amount=amount, transaction_type='credit')
-    db.session.add(transaction)
-    db.session.commit()
-
-    return jsonify({"balance": user.balance}), 200
 
 @main_page.route('/load_more_tasks')
 def load_more_tasks():
@@ -203,14 +214,7 @@ def load_more_transactions():
     return jsonify(transactions=transaction_data)
 
 
-@main_page.route('/api/balance', methods=['GET'])
-def get_balance():
-    user_id = request.json.get('user_id')
-    user = User.query.filter_by(id=user_id).first()
-    if user:
-        return jsonify({"balance": user.balance}), 200
-    else:
-        return jsonify({"error": "User not found."}), 404
+
 
 @main_page.route('/api/latest_result', methods=['GET'])
 def latest_result():
@@ -220,3 +224,9 @@ def latest_result():
         return jsonify({"prompt": latest_task.prompt, "summary": latest_task.result}), 200
     else:
         return jsonify({"error": "No recent tasks found."}), 404
+
+@main_page.route('/admin/view_users')
+def view_users():
+    users = User.query.all()
+    user_list = [{"id": user.id, "username": user.username, "balance": user.balance} for user in users]
+    return jsonify(user_list)
