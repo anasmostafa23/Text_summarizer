@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, FloatField
+from wtforms import StringField, PasswordField, SubmitField, FloatField, ValidationError
 from wtforms.validators import DataRequired, Length
 
 class RegistrationForm(FlaskForm):
@@ -12,6 +12,12 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
+def positive_amount(form, field):
+    if field.data <= 0:
+        raise ValidationError('Amount must be positive')
+
 class RechargeForm(FlaskForm):
-    amount = FloatField('Recharge Amount', validators=[DataRequired()])
+    amount = FloatField('Recharge Amount', validators=[DataRequired(), positive_amount])
     submit = SubmitField('Recharge')
+    
+
