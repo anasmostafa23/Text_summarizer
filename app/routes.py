@@ -125,11 +125,11 @@ def submit_task():
             print("sending to q")
             publish_task_to_queue(task_data)
             ok= True
-            return render_template('submit_task.html',prompt=prompt,ok=ok)
+            return render_template('submit_task.html',prompt=prompt,ok= ok)
 
         else:
             error = "Insufficient Balance."
-            flash('Insufficient Balance.')
+            
             return render_template('submit_task.html', error=error, prompt=prompt)
 
     return render_template('submit_task.html')
