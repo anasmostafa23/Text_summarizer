@@ -5,4 +5,3 @@
 • Exposed via Ngrok for providing public URL.
 • Dockerized for easy deployment.
 
-## Contributing is welcome)
